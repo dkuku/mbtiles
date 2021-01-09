@@ -1,4 +1,4 @@
-defmodule TileServer.Mbtiles do
+defmodule Mbtiles.DB do
   alias Sqlitex.Server
 
   def get_images(z, x, y, opts \\ []) do
@@ -7,7 +7,7 @@ defmodule TileServer.Mbtiles do
     query =
       "SELECT tile_data FROM tiles where zoom_level = ? and tile_column = ? and tile_row = ?"
 
-    with {:ok, [data]} <- Server.query(TilesDB, query, bind: [z, x, y]),
+    with {:ok, [data]} <- Server.query(Mbtiles, query, bind: [z, x, y]),
          [tile_data: tile_blob] <- data,
          {:blob, tile} <- tile_blob do
       case opts[:gzip] do
@@ -24,7 +24,7 @@ defmodule TileServer.Mbtiles do
   def get_metadata do
     query = "SELECT * FROM metadata"
 
-    with {:ok, rows} <- Server.query(TilesDB, query) do
+    with {:ok, rows} <- Server.query(Mbtiles, query) do
       Enum.reduce(rows, %{}, fn [name: name, value: value], acc ->
         Map.put(acc, String.to_atom(name), value)
       end)
@@ -34,7 +34,7 @@ defmodule TileServer.Mbtiles do
   end
 
   def query(query) do
-    {:ok, rows} = Server.query(TilesDB, query)
+    {:ok, rows} = Server.query(Mbtiles, query)
     rows
   end
 

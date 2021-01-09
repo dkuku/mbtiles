@@ -1,16 +1,16 @@
-defmodule Mix.Tasks.MbtileUnpack do
+defmodule Mix.Tasks.MbtilesUnpack do
   use Mix.Task
 
   @path "priv/static/static_tiles"
   def run(_) do
-    {:ok, _started} = Application.ensure_all_started(:tile_server)
+    {:ok, _started} = Application.ensure_all_started(:mbtiles)
 
-    TileServer.Mbtiles.query("select distinct(zoom_level) from tiles;")
+    Mbtiles.DB.query("select distinct(zoom_level) from tiles;")
     |> Enum.map(fn [zoom_level: zoom] -> process_zoom(zoom) end)
   end
 
   def process_zoom(zoom) do
-    TileServer.Mbtiles.query(
+    Mbtiles.DB.query(
       "select distinct(tile_column) from tiles where zoom_level = #{zoom} ;"
     )
     |> Enum.map(fn [tile_column: column] -> process_columns(zoom, column) end)
@@ -36,7 +36,7 @@ defmodule Mix.Tasks.MbtileUnpack do
   end
 
   def dump_files(zoom, column) do
-    TileServer.Mbtiles.query(
+    Mbtiles.DB.query(
       "select * from tiles where zoom_level = #{zoom} and tile_column = #{column} ;"
     )
     |> Enum.map(fn row -> save_file(row) end)
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.MbtileUnpack do
       tile_data: {:blob, content}
     ] = row
 
-    y = TileServer.Mbtiles.get_tms_y(y_stored, zoom)
+    y = Mbtiles.DB.get_tms_y(y_stored, zoom)
 
     path =
       Path.join([
