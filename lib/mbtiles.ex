@@ -1,5 +1,6 @@
 defmodule TileServer.Mbtiles do
   alias Sqlitex.Server
+
   def get_images(z, x, y, opts \\ []) do
     y = maybe_get_tms_y(y, z, opts[:tms])
 
