@@ -1,6 +1,11 @@
 # Mbtiles
 
-**TODO: Add description**
+you need a mbtils file for this package to work
+to specify the location add an entry in your config.exs file
+`config :mbtiles, mbtiles_path: "priv/poland.mbtiles"`
+
+## Example repository
+[dkuku/tile_server](https://github.com/dkuku/)
 
 ## Installation
 
@@ -14,8 +19,3 @@ def deps do
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/mbtiles](https://hexdocs.pm/mbtiles).
-
