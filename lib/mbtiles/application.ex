@@ -8,7 +8,7 @@ defmodule Mbtiles.Application do
 
   @impl true
   def start(_type, _args) do
-    database_path = Application.get_env(:mbtiles, :mbtiles_path)
+    database_path = Application.get_env(:mbtiles, :mbtiles_path, "test/test.mbtiles")
 
     children = [
       %{
