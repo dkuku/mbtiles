@@ -10,10 +10,7 @@ defmodule Mbtiles.DB do
     with {:ok, [data]} <- Server.query(Mbtiles, query, bind: [z, x, y]),
          [tile_data: tile_blob] <- data,
          {:blob, tile} <- tile_blob do
-      case opts[:gzip] do
-        true -> tile
-        _ -> :zlib.gunzip(tile)
-      end
+      process_file(tile, opts)
     else
       error ->
         IO.inspect(error)
@@ -42,4 +39,19 @@ defmodule Mbtiles.DB do
   defp maybe_get_tms_y(y, _z, _), do: y
 
   def get_tms_y(y, z), do: round(:math.pow(2, z) - 1 - y)
+
+  def process_file(<<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, _rest::bytes>> = png, _opts) do
+    {:png, png}
+  end
+
+  def process_file(<<0xFF, _rest::bytes>> = jpeg, _opts) do
+    {:jpeg, jpeg}
+  end
+
+  def process_file(tile, opts) do
+    case opts[:gzip] do
+      true -> {:pbf_gz, tile}
+      _ -> {:pbf, :zlib.gunzip(tile)}
+    end
+  end
 end

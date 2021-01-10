@@ -57,9 +57,13 @@ defmodule Mix.Tasks.MbtilesUnpack do
         @path,
         Integer.to_string(zoom),
         Integer.to_string(column),
-        Integer.to_string(y) <> ".pbf.gz"
+        Integer.to_string(y) <> "." <> get_extension(content)
       ])
 
     File.write(path, content)
   end
+  defp get_extension(<<0x89, 0x50, 0x4E, 0x47, _rest::bytes>> = _png), do: "png"
+  defp get_extension(<<0xFF, _rest::bytes>> = _jpeg), do: "jpeg"
+  defp get_extension(_), do: "pbf.gz"
+
 end
