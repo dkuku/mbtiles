@@ -3,11 +3,12 @@ defmodule Mbtiles.DB do
 
   def get_images(z, x, y, opts \\ []) do
     y = maybe_get_tms_y(y, z, opts[:tms])
+    database = opts[:database] || Mbtiles
 
     query =
       "SELECT tile_data FROM tiles where zoom_level = ? and tile_column = ? and tile_row = ?"
 
-    with {:ok, [data]} <- Server.query(Mbtiles, query, bind: [z, x, y]),
+    with {:ok, [data]} <- Server.query(database, query, bind: [z, x, y]),
          [tile_data: tile_blob] <- data,
          {:blob, tile} <- tile_blob do
       process_file(tile, opts)
@@ -18,10 +19,10 @@ defmodule Mbtiles.DB do
     end
   end
 
-  def get_metadata do
+  def get_metadata(database \\ Mbtiles) do
     query = "SELECT * FROM metadata"
 
-    with {:ok, rows} <- Server.query(Mbtiles, query) do
+    with {:ok, rows} <- Server.query(database, query) do
       Enum.reduce(rows, %{}, fn [name: name, value: value], acc ->
         Map.put(acc, String.to_atom(name), value)
       end)
