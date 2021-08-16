@@ -5,10 +5,11 @@ defmodule Mbtiles.Application do
 
   use Application
   alias Sqlitex.Server
+  require Logger
 
   @impl true
   def start(_type, _args) do
-    children = database_path() |> IO.inspect() |> Enum.map(&child/1)
+    children = database_path() |> Enum.map(&child/1)
 
     opts = [strategy: :one_for_one]
     Supervisor.start_link(children, opts)
@@ -16,7 +17,6 @@ defmodule Mbtiles.Application do
 
   defp database_path() do
     path = Application.get_env(:mbtiles, :mbtiles_path)
-    IO.inspect(path)
 
     cond do
       is_bitstring(path) ->
@@ -29,7 +29,7 @@ defmodule Mbtiles.Application do
         [{Mbtiles, "test/test.mbtiles"}]
 
       path ->
-        IO.inspect("error #{path}")
+        Logger.error("error #{path}")
         [{Mbtiles, "test/test.mbtiles"}]
     end
   end

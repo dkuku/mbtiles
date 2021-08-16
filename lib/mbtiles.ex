@@ -1,39 +1,49 @@
 defmodule Mbtiles.DB do
-  alias Sqlitex.Server
+  @moduledoc false
+
+  import AyeSQL, only: [defqueries: 3]
+  defqueries(Queries, "queries.sql", runner: SqlitexRunner)
+
+  require Logger
 
   def get_images(z, x, y, opts \\ []) do
     y = maybe_get_tms_y(y, z, opts[:tms])
     database = opts[:database] || Mbtiles
 
-    query =
-      "SELECT tile_data FROM tiles where zoom_level = ? and tile_column = ? and tile_row = ?"
-
-    with {:ok, [data]} <- Server.query(database, query, bind: [z, x, y]),
+    with {:ok, [data]} <- Queries.get_tile([zoom: z, x: x, y: y], database: database, run?: true),
          [tile_data: tile_blob] <- data,
          {:blob, tile} <- tile_blob do
       process_file(tile, opts)
     else
       error ->
-        IO.inspect(error)
-        :error
+        Logger.error(inspect(error))
+        {:error, error}
     end
   end
 
   def get_metadata(database \\ Mbtiles) do
-    query = "SELECT * FROM metadata"
+    case Queries.get_metadata([], database: database, run?: true) do
+      {:ok, rows} ->
+        Enum.reduce(rows, %{}, fn [name: name, value: value], acc ->
+          Map.put(acc, String.to_atom(name), value)
+        end)
 
-    with {:ok, rows} <- Server.query(database, query) do
-      Enum.reduce(rows, %{}, fn [name: name, value: value], acc ->
-        Map.put(acc, String.to_atom(name), value)
-      end)
-    else
-      error -> IO.inspect(error)
+      error ->
+        Logger.error(inspect(error))
+        {:error, error}
     end
   end
 
-  def query(query) do
-    {:ok, rows} = Server.query(Mbtiles, query)
-    rows
+  def get_all_zoom_levels(database \\ MBtiles) do
+    Queries.get_all_zoom_levels([], database, run?: true)
+  end
+
+  def process_zoom(zoom, database \\ MBtiles) do
+    Queries.process_zoom([zoom: zoom], database, run?: true)
+  end
+
+  def dump_tiles(zoom, column, database \\ MBtiles) do
+    Queries.dump_tiles([zoom: zoom, column: column], database, run?: true)
   end
 
   defp maybe_get_tms_y(y, z, true), do: get_tms_y(y, z)

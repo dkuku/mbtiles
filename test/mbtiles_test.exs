@@ -3,6 +3,6 @@ defmodule MbtilesTest do
   doctest Mbtiles.DB
 
   test "greets the world" do
-    assert Mbtiles.hello() == :world
+    assert 1 + 1 == 2
   end
 end

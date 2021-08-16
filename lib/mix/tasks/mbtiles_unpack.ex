@@ -1,24 +1,26 @@
 defmodule Mix.Tasks.MbtilesUnpack do
+  @moduledoc """
+  allows to dump all files from a database to filesystem
+  """
   use Mix.Task
 
+  require Logger
   @path "priv/static/static_tiles"
   def run(_) do
     {:ok, _started} = Application.ensure_all_started(:mbtiles)
 
-    Mbtiles.DB.query("select distinct(zoom_level) from tiles;")
+    Mbtiles.DB.get_all_zoom_levels()
     |> Enum.map(fn [zoom_level: zoom] -> process_zoom(zoom) end)
   end
 
   def process_zoom(zoom) do
-    Mbtiles.DB.query(
-      "select distinct(tile_column) from tiles where zoom_level = #{zoom} ;"
-    )
+    Mbtiles.DB.process_zoom(zoom)
     |> Enum.map(fn [tile_column: column] -> process_columns(zoom, column) end)
   end
 
   def process_columns(zoom, column) do
     mkdir(zoom, column)
-    IO.inspect(column)
+    Logger.error(column)
   end
 
   def mkdir(zoom, column) do
@@ -26,19 +28,17 @@ defmodule Mix.Tasks.MbtilesUnpack do
 
     case File.mkdir_p(path) do
       :ok ->
-        dump_files(zoom, column)
+        dump_tiles(zoom, column)
 
       error ->
-        IO.inspect(error)
-        IO.inspect(path)
-        dump_files(zoom, column)
+        Logger.error(error)
+        Logger.error(path)
+        dump_tiles(zoom, column)
     end
   end
 
-  def dump_files(zoom, column) do
-    Mbtiles.DB.query(
-      "select * from tiles where zoom_level = #{zoom} and tile_column = #{column} ;"
-    )
+  def dump_tiles(zoom, column) do
+    Mbtiles.DB.dump_tiles(zoom, column)
     |> Enum.map(fn row -> save_file(row) end)
   end
 
@@ -62,8 +62,8 @@ defmodule Mix.Tasks.MbtilesUnpack do
 
     File.write(path, content)
   end
+
   defp get_extension(<<0x89, 0x50, 0x4E, 0x47, _rest::bytes>> = _png), do: "png"
   defp get_extension(<<0xFF, _rest::bytes>> = _jpeg), do: "jpeg"
   defp get_extension(_), do: "pbf.gz"
-
 end
