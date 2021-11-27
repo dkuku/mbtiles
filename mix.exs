@@ -24,7 +24,7 @@ defmodule Mbtiles.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:sqlitex, github: "elixir-sqlite/sqlitex"},
+      {:ecto_sqlite3, "~> 0.7.1"},
       {:ayesql, "~> 0.6"},
       {:ex_doc, "~> 0.23", only: :dev, runtime: false}
     ]

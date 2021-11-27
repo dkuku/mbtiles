@@ -2,7 +2,7 @@ defmodule Mbtiles.DB do
   @moduledoc false
 
   import AyeSQL, only: [defqueries: 3]
-  defqueries(Queries, "queries.sql", runner: SqlitexRunner)
+  defqueries(Queries, "queries.sql", repo: Mbtiles.Repo, runner: Mbtiles.MbtilesRunner)
 
   require Logger
 
@@ -10,9 +10,8 @@ defmodule Mbtiles.DB do
     y = maybe_get_tms_y(y, z, opts[:tms])
     database = opts[:database] || Mbtiles
 
-    with {:ok, [data]} <- Queries.get_tile([zoom: z, x: x, y: y], database: database, run?: true),
-         [tile_data: tile_blob] <- data,
-         {:blob, tile} <- tile_blob do
+    with {:ok, %Exqlite.Result{rows: data}} <- Queries.get_tile([zoom: z, x: x, y: y], database: database),
+         [tile] <- data do
       process_file(tile, opts)
     else
       error ->
@@ -21,10 +20,10 @@ defmodule Mbtiles.DB do
     end
   end
 
-  def get_metadata(database \\ Mbtiles) do
-    case Queries.get_metadata([], database: database, run?: true) do
-      {:ok, rows} ->
-        Enum.reduce(rows, %{}, fn [name: name, value: value], acc ->
+  def get_metadata(repo \\ repo: Mbtiles.Repo) do
+    case Queries.get_metadata([], database: database) do
+      {:ok, %Exqlite.Result{rows: rows}} ->
+        Enum.reduce(rows, %{}, fn [name, value], acc ->
           Map.put(acc, String.to_atom(name), value)
         end)
 
@@ -34,16 +33,19 @@ defmodule Mbtiles.DB do
     end
   end
 
-  def get_all_zoom_levels(database \\ MBtiles) do
-    Queries.get_all_zoom_levels([], database, run?: true)
+  def get_all_zoom_levels(database \\ repo: MBtiles.Repo) do
+    {:ok, %Exqlite.Result{rows: rows}} = Queries.get_all_zoom_levels([], database)
+    {:ok, rows}
   end
 
-  def process_zoom(zoom, database \\ MBtiles) do
-    Queries.process_zoom([zoom: zoom], database, run?: true)
+  def process_zoom(zoom, database \\ repo: MBtiles.Repo) do
+    {:ok, %Exqlite.Result{rows: rows}} = Queries.process_zoom([zoom: zoom], database)
+    {:ok, rows}
   end
 
-  def dump_tiles(zoom, column, database \\ MBtiles) do
-    Queries.dump_tiles([zoom: zoom, column: column], database, run?: true)
+  def dump_tiles(zoom, column, database \\ repo: MBtiles.Repo) do
+    {:ok, %Exqlite.Result{rows: rows}} = Queries.dump_tiles([zoom: zoom, column: column], database)
+    {:ok, rows}
   end
 
   defp maybe_get_tms_y(y, z, true), do: get_tms_y(y, z)
