@@ -8,9 +8,8 @@ defmodule Mbtiles.DB do
 
   def get_images(z, x, y, opts \\ []) do
     y = maybe_get_tms_y(y, z, opts[:tms])
-    database = opts[:database] || Mbtiles
 
-    with {:ok, %Exqlite.Result{rows: data}} <- Queries.get_tile([zoom: z, x: x, y: y], database: database),
+    with {:ok, %Exqlite.Result{rows: data}} <- Queries.get_tile([zoom: z, x: x, y: y], opts),
          [tile] <- data do
       process_file(tile, opts)
     else
@@ -20,8 +19,8 @@ defmodule Mbtiles.DB do
     end
   end
 
-  def get_metadata(repo \\ repo: Mbtiles.Repo) do
-    case Queries.get_metadata([], database: database) do
+  def get_metadata(opts \\ []) do
+    case Queries.get_metadata([], database: opts) do
       {:ok, %Exqlite.Result{rows: rows}} ->
         Enum.reduce(rows, %{}, fn [name, value], acc ->
           Map.put(acc, String.to_atom(name), value)
@@ -33,18 +32,18 @@ defmodule Mbtiles.DB do
     end
   end
 
-  def get_all_zoom_levels(database \\ repo: MBtiles.Repo) do
-    {:ok, %Exqlite.Result{rows: rows}} = Queries.get_all_zoom_levels([], database)
+  def get_all_zoom_levels(opts \\ []) do
+    {:ok, %Exqlite.Result{rows: rows}} = Queries.get_all_zoom_levels([], opts)
     {:ok, rows}
   end
 
-  def process_zoom(zoom, database \\ repo: MBtiles.Repo) do
-    {:ok, %Exqlite.Result{rows: rows}} = Queries.process_zoom([zoom: zoom], database)
+  def process_zoom(zoom, opts \\ []) do
+    {:ok, %Exqlite.Result{rows: rows}} = Queries.process_zoom([zoom: zoom], opts)
     {:ok, rows}
   end
 
-  def dump_tiles(zoom, column, database \\ repo: MBtiles.Repo) do
-    {:ok, %Exqlite.Result{rows: rows}} = Queries.dump_tiles([zoom: zoom, column: column], database)
+  def dump_tiles(zoom, column, opts \\ []) do
+    {:ok, %Exqlite.Result{rows: rows}} = Queries.dump_tiles([zoom: zoom, column: column], opts)
     {:ok, rows}
   end
 
