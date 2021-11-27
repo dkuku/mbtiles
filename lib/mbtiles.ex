@@ -11,7 +11,7 @@ defmodule Mbtiles.DB do
 
     with {:ok, %Exqlite.Result{rows: data}} <- Queries.get_tile([zoom: z, x: x, y: y], opts),
          [tile] <- data do
-      process_file(tile, opts)
+      get_extension(tile, opts)
     else
       error ->
         Logger.error(inspect(error))
@@ -43,8 +43,8 @@ defmodule Mbtiles.DB do
   end
 
   def dump_tiles(zoom, column, opts \\ []) do
-    {:ok, %Exqlite.Result{rows: rows}} = Queries.dump_tiles([zoom: zoom, column: column], opts)
-    {:ok, rows}
+    {:ok, %Exqlite.Result{rows: columns}} = Queries.dump_tiles([zoom: zoom, column: column], opts)
+    {:ok, columns}
   end
 
   defp maybe_get_tms_y(y, z, true), do: get_tms_y(y, z)
@@ -52,15 +52,15 @@ defmodule Mbtiles.DB do
 
   def get_tms_y(y, z), do: round(:math.pow(2, z) - 1 - y)
 
-  def process_file(<<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, _rest::bytes>> = png, _opts) do
+  def get_extension(<<0x89, 0x50, 0x4E, 0x47, _rest::bytes>> = png, _opts) do
     {:png, png}
   end
 
-  def process_file(<<0xFF, _rest::bytes>> = jpeg, _opts) do
+  def get_extension(<<0xFF, _rest::bytes>> = jpeg, _opts) do
     {:jpeg, jpeg}
   end
 
-  def process_file(tile, opts) do
+  def get_extension(tile, opts) do
     case opts[:gzip] do
       true -> {:pbf_gz, tile}
       _ -> {:pbf, :zlib.gunzip(tile)}

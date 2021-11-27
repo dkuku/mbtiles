@@ -9,18 +9,18 @@ defmodule Mix.Tasks.MbtilesUnpack do
   def run(_) do
     {:ok, _started} = Application.ensure_all_started(:mbtiles)
 
-    Mbtiles.DB.get_all_zoom_levels()
-    |> Enum.map(fn [zoom_level: zoom] -> process_zoom(zoom) end)
+    {:ok, zoom_levels} = Mbtiles.DB.get_all_zoom_levels()
+    Enum.map(zoom_levels, fn [zoom] -> process_zoom(zoom) end)
   end
 
   def process_zoom(zoom) do
-    Mbtiles.DB.process_zoom(zoom)
-    |> Enum.map(fn [tile_column: column] -> process_columns(zoom, column) end)
+    {:ok, zoom_levels} = Mbtiles.DB.process_zoom(zoom)
+    
+   Enum.map(zoom_levels, fn [column] -> process_columns(zoom, column) end)
   end
 
   def process_columns(zoom, column) do
     mkdir(zoom, column)
-    Logger.error(column)
   end
 
   def mkdir(zoom, column) do
@@ -37,33 +37,33 @@ defmodule Mix.Tasks.MbtilesUnpack do
     end
   end
 
-  def dump_tiles(zoom, column) do
-    Mbtiles.DB.dump_tiles(zoom, column)
-    |> Enum.map(fn row -> save_file(row) end)
+  def dump_tiles(zoom, tile_column) do
+    {:ok, column} = Mbtiles.DB.dump_tiles(zoom, tile_column)
+    Enum.map(column, fn row -> save_file(row) end)
   end
 
   def save_file(row) do
     [
-      zoom_level: zoom,
-      tile_column: column,
-      tile_row: y_stored,
-      tile_data: {:blob, content}
+      zoom,
+      tile_column,
+      tile_row,
+      content
     ] = row
 
-    y = Mbtiles.DB.get_tms_y(y_stored, zoom)
+    y = Mbtiles.DB.get_tms_y(tile_row, zoom)
+    {extension, _content} = Mbtiles.DB.get_extension(content, gzip: true)
 
     path =
       Path.join([
         @path,
         Integer.to_string(zoom),
-        Integer.to_string(column),
-        Integer.to_string(y) <> "." <> get_extension(content)
+        Integer.to_string(tile_column),
+        Integer.to_string(y) <> "." <> convert_extension(extension)
       ])
 
     File.write(path, content)
   end
 
-  defp get_extension(<<0x89, 0x50, 0x4E, 0x47, _rest::bytes>> = _png), do: "png"
-  defp get_extension(<<0xFF, _rest::bytes>> = _jpeg), do: "jpeg"
-  defp get_extension(_), do: "pbf.gz"
+  defp convert_extension(:pbf_gz), do: "pbf.gz"
+  defp convert_extension(extension), do: Atom.to_string(extension)
 end
