@@ -74,5 +74,7 @@ defmodule Mbtiles do
 
   def get_extension(<<0x89, 0x50, 0x4E, 0x47, _rest::bytes>>), do: :png
   def get_extension(<<0xFF, _rest::bytes>>), do: :jpeg
+  def get_extension(<<0x1F, 0x8B, 0x08, _rest::bytes>>), do: :pbf_gz
+  def get_extension(<<26, _rest::bytes>>), do: :pbf
   def get_extension(_tile), do: :pbf
 end
