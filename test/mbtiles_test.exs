@@ -19,7 +19,12 @@ defmodule MbtilesTest do
     y = 0
     zoom_0 = Mbtiles.get_all_y_tiles(zoom, y)
     assert length(zoom_0) == 2
-    assert [[^zoom, ^y, 0, _], [^zoom, ^y, 1, _]] = zoom_0
+
+    assert [
+             %{zoom_level: ^zoom, tile_column: ^y, tile_row: 0},
+             %{zoom_level: ^zoom, tile_column: ^y, tile_row: 1}
+           ] = zoom_0
+
     zoom_1 = Mbtiles.get_all_y_tiles(1, y)
     assert length(zoom_1) == 3
     zoom_2 = Mbtiles.get_all_y_tiles(2, y)
@@ -31,7 +36,7 @@ defmodule MbtilesTest do
     y = 0
     x = 1
     tile = Mbtiles.get_tile(zoom, x, y)
-    assert <<137, 80, 78, 71, rest::bytes>> = tile
+    assert <<137, 80, 78, 71, _rest::bytes>> = tile
   end
 
   test "get_extension/4" do
@@ -44,6 +49,12 @@ defmodule MbtilesTest do
 
   test "get_metadata" do
     metadata = Mbtiles.get_metadata()
-    assert metadata == %{description: "", name: "control_room", type: "baselayer", version: "1.0.0"}
+
+    assert metadata == %{
+             description: "",
+             name: "control_room",
+             type: "baselayer",
+             version: "1.0.0"
+           }
   end
 end

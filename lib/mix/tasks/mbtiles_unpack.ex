@@ -43,12 +43,7 @@ defmodule Mix.Tasks.MbtilesUnpack do
   end
 
   defp save_file(row) do
-    [
-      zoom,
-      tile_column,
-      tile_row,
-      content
-    ] = row
+    %{zoom_level: zoom, tile_column: tile_column, tile_row: tile_row, tile_data: content} = row
 
     y = Mbtiles.get_tms_y(tile_row, zoom)
     extension = Mbtiles.get_extension(content)

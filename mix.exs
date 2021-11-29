@@ -4,7 +4,7 @@ defmodule Mbtiles.MixProject do
   def project do
     [
       app: :mbtiles,
-      version: "0.4.1",
+      version: "0.4.2",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -25,7 +25,6 @@ defmodule Mbtiles.MixProject do
   defp deps do
     [
       {:ecto_sqlite3, "~> 0.7.1"},
-      {:ayesql, "~> 0.6"},
       {:ex_doc, "~> 0.23", only: :dev, runtime: false}
     ]
   end
