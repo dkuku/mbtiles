@@ -2,7 +2,14 @@
 
 you need a mbtils file for this package to work
 to specify the location add an entry in your config.exs file
-`config :mbtiles, mbtiles_path: "priv/poland.mbtiles"`
+
+```
+config :mbtiles,
+  ecto_repos: [Mbtiles.Repo]
+
+config :mbtiles, Mbtiles.Repo,
+  database: "priv/united_kingdom.mbtiles"
+```
 
 ## Example repository
 [dkuku/tile_server](https://github.com/dkuku/tile_server)
@@ -15,7 +22,7 @@ by adding `mbtiles` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:mbtiles, "~> 0.1.0"}
+    {:mbtiles, "~> 0.4.2"}
   ]
 end
 ```
