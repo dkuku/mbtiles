@@ -4,9 +4,9 @@ defmodule Queries do
   @doc """
   Selects a single tile from database.
   """
-  def get_tile(zoom, x, y) do
+  def get_tile(zoom, column, row) do
     from("tiles",
-      where: [zoom_level: ^zoom, tile_column: ^y, tile_row: ^x],
+      where: [zoom_level: ^zoom, tile_column: ^column, tile_row: ^row],
       select: [:tile_data]
     )
     |> Mbtiles.Repo.one()
@@ -16,19 +16,14 @@ defmodule Queries do
   Gets all of metadata.
   """
   def get_metadata() do
-    from("metadata",
-      select: [:name, :value]
-    )
+    from("metadata", select: [:name, :value])
     |> Mbtiles.Repo.all()
     |> Enum.map(fn %{name: name, value: value} -> {String.to_atom(name), value} end)
     |> Enum.into(%{})
   end
 
   def get_all_zoom_levels do
-    from("tiles",
-      distinct: true,
-      select: [:zoom_level]
-    )
+    from("tiles", distinct: true, select: [:zoom_level])
     |> Mbtiles.Repo.all()
     |> Enum.map(& &1.zoom_level)
   end
